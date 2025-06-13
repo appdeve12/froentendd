@@ -1,0 +1,26 @@
+/* src/components/Login.css */
+
+.login-page {
+  background: linear-gradient(135deg, #129d7f, #c4f990);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.login-card .form-control {
+  border-radius: 0.5rem;
+}
+
+.login-card .btn {
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  padding: 0.6rem;
+   background: linear-gradient(135deg, #129d7f, #c4f990);
+}
