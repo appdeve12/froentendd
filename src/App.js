@@ -1,4 +1,6 @@
 // src/App.js
+import {findDOMNode} from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './container/Login/Login';

@@ -17,7 +17,7 @@ const FileAttachment = () => {
   const [showModal, setShowModal] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
 
-  const baseURL = "http://16.171.165.95";
+  const baseURL = "http://56.228.42.114";
 
   const getFullUrl = (url) => url?.startsWith('http') ? url : `${baseURL}${url}`;
 
@@ -72,10 +72,10 @@ const FileAttachment = () => {
       };
 
       dispatch(storeFiles([...attachfile, newFile]));
-  toast.success("Uploaded Successfully", {
-  autoClose: 2000,
-  toastId: 'upload-success',
-});
+      toast.success("Uploaded Successfully", {
+        autoClose: 2000,
+        toastId: 'upload-success',
+      });
 
     } catch (err) {
       console.error('Upload failed:', err);
@@ -97,10 +97,10 @@ const FileAttachment = () => {
         type="file"
         accept={
           fileType === 'Photos' ? 'image/*' :
-          fileType === 'Videos' ? 'video/*' :
-          fileType === 'Pdf' ? '.pdf' :
-          fileType === 'Docx' ? '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
-          '*'
+            fileType === 'Videos' ? 'video/*' :
+              fileType === 'Pdf' ? '.pdf' :
+                fileType === 'Docx' ? '.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document' :
+                  '*'
         }
         ref={fileInputRef}
         onChange={handleFileChange}
@@ -124,6 +124,7 @@ const FileAttachment = () => {
           </Dropdown>
         </Card.Header>
 
+
         <Card.Body>
           <div style={{ maxHeight: '80vh', overflowY: 'auto' }}>
             <Table striped bordered hover size="sm" className="bg-white">
@@ -134,7 +135,7 @@ const FileAttachment = () => {
                   <th>Preview</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody>                                                    
                 {attachfile.length > 0 ? (
                   attachfile.map((file, idx) => (
                     <tr key={idx}>

@@ -6,8 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import "../../assets/css/custum.css"
 import { storeWhatsappNumber } from '../../redux/whatsappSlice';
 import * as XLSX from 'xlsx';
-
+  import axios from 'axios';
 const WhatsaapNumber = () => {
+    const session = useSelector(state => state.auth.sessions);
   const dispatch = useDispatch();
   const numbers = useSelector(state => state.whatsapp.whatsappNumber);
   const [contacts, setContacts] = useState([]);
@@ -31,6 +32,51 @@ const WhatsaapNumber = () => {
 
   };
 
+
+const verificationnumberregisterornot = async (contacts) => {
+  debugger;
+  const batchSize = 100;
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+  const verifiedContacts = [];
+
+  for (let i = 0; i < contacts.length; i += batchSize) {
+    const batch = contacts.slice(i, i + batchSize);
+    const numbersOnly = batch.map(contact => contact.number);
+ const sessionNumber = session[0]?.realNumber;
+    try {
+      const response = await axios.post('http://13.53.41.83/check', {
+        sessionNumber: sessionNumber, // Update if dynamic
+        numbers: numbersOnly,
+      });
+
+      if (response.data?.results && Array.isArray(response.data.results)) {
+        const registeredNumbers = response.data.results
+          .filter(r => r.isRegistered)
+          .map(r => r.number);
+
+        // Keep only contacts whose number is verified
+        const registeredContacts = batch.filter(contact =>
+          registeredNumbers.includes(contact.number)
+        );
+
+        verifiedContacts.push(...registeredContacts);
+      }
+    } catch (error) {
+      console.error(`Batch ${i / batchSize + 1} verification failed:`, error);
+    }
+
+    await delay(1000); // Delay to avoid overloading the API
+  }
+
+  // Optionally log the result
+  console.log('✅ Verified Contacts:', verifiedContacts);
+
+  // Update state or Redux
+  dispatch(storeWhatsappNumber(verifiedContacts));
+  setContacts(verifiedContacts);
+};
+
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -45,7 +91,7 @@ const WhatsaapNumber = () => {
 
         const parsedContacts = lines.map(line => {
           const [name, number] = line.split(',');
-          return { name: name?.trim(), number: number?.trim(), var1: '' };
+          return { name: name?.trim(), number: number?.trim() };
         });
 
         processContacts(parsedContacts);
@@ -70,7 +116,7 @@ const WhatsaapNumber = () => {
         const parsedContacts = jsonData.map(row => {
           const name = row[0] ? String(row[0]).trim() : '';
           const number = row[1] ? String(row[1]).trim() : '';
-          return { name, number, var1: '' };
+          return { name, number};
         }).filter(contact => contact.name && contact.number); // filter out empty rows
 
         processContacts(parsedContacts);
@@ -90,9 +136,9 @@ const WhatsaapNumber = () => {
       seen.add(key);
       return true;
     });
-
-    dispatch(storeWhatsappNumber(uniqueContacts));
-    setContacts(uniqueContacts);
+console.log("uniqueContacts",uniqueContacts )
+  verificationnumberregisterornot(uniqueContacts);
+ 
   };
 
 
@@ -122,6 +168,7 @@ const WhatsaapNumber = () => {
 
     setShowManualImport(false);
   };
+
 
 
 
@@ -249,6 +296,7 @@ const WhatsaapNumber = () => {
           show={showManualImport}
           handleClose={() => setShowManualImport(false)}
           handleImport={handleManualImport}
+        
         />
       )}
     </div>

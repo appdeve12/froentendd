@@ -12,8 +12,15 @@ import { storetoken } from '../../redux/authSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import { FaRegUserCircle } from "react-icons/fa";
 import { FiClock, FiSend } from "react-icons/fi";
+import "../../assets/css/custum.css"
 const Header = () => {
    const session = useSelector(state => state.auth.sessions);
+       console.log("redux sessions",session)
+   const activeSessions = session?.filter(session =>
+    session.status && session.status.toLowerCase().includes("logged in")
+  ) || [];
+
+
   const dispatch=useDispatch()
       const userdata = useSelector(state => state.auth.userdata);
   
@@ -54,13 +61,19 @@ const routeSentMessages=()=>{
 }
   return (
     <>
-      <Navbar bg="success" variant="dark" expand="lg" className="shadow-sm py-2">
+      <Navbar bg="success" variant="dark" expand="lg" className="shadow-sm py-4">
         <Container fluid>
           {/* Brand */}
-          <Navbar.Brand  className="fw-bold d-flex align-items-center gap-2 text-white">
-            <FaWhatsapp size={24} />
-            Whatsapp Bulk Sender
-          </Navbar.Brand>
+         <Navbar.Brand 
+  className="fw-bold d-flex align-items-center gap-2 text-white"
+  onClick={() => window.open('https://web.whatsapp.com', '_blank')}
+  role="button"
+  style={{ cursor: 'pointer' }}
+>
+  <FaWhatsapp size={24} />
+  Whatsapp 
+</Navbar.Brand>
+
 
           <Navbar.Toggle aria-controls="navbar-nav" />
           <Navbar.Collapse id="navbar-nav">
@@ -71,9 +84,13 @@ const routeSentMessages=()=>{
               <Nav.Link  className="d-flex align-items-center gap-1 text-white fw-semibold" onClick={()=>routehelp()}>
                 <FiHelpCircle size={20} /> <span>Help</span>
               </Nav.Link>
-              <Nav.Link className="d-flex align-items-center gap-1 text-white fw-semibold"onClick={()=>Logesinsessions()}>
-                <FiInbox size={20} /> <span>Logged In Sessions</span>
-              </Nav.Link>
+             <Nav.Link className="position-relative d-flex align-items-center gap-1 text-white fw-semibold"onClick={()=>Logesinsessions()}>
+      <FiInbox size={24} />
+      <span>Logged In Sessions</span>
+      {activeSessions.length > 0 && (
+        <span className="badge-count">{activeSessions.length}</span>
+      )}
+    </Nav.Link>
                 
 
 

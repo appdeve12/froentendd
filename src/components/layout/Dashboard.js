@@ -43,131 +43,105 @@ const dispatch=useDispatch()
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000); 
   }, []);
-const preparePayload = () => {
+  const preparePayload = () => {
+    const to = numbers.map(n => {
+      let num = n.number.toString().replace(/\D/g, '');
+      if (num.startsWith('91') && num.length === 12) num = num.slice(2);
+      else if (num.startsWith('0') && num.length === 11) num = num.slice(1);
+      return `91${num}`;
+    });
 
-  const to = numbers.map(n => {
-  let num = n.number.toString().replace(/\D/g, ''); // remove non-digit characters
+    const message = messages.map(m => m.text);
+    const photo = attachfiles.filter(f => f.type === "Photos").map(f => f.url.split('/').pop());
+    const videoFile = attachfiles.find(f => f.type === "Videos");
+    const pdfFile = attachfiles.find(f => f.type === "Pdf");
+    const docxFile = attachfiles.find(f => f.type === "Docx");
 
-  // Remove leading '91' if already present, or '0' if it's a local number
-  if (num.startsWith('91') && num.length === 12) {
-    num = num.slice(2);
-  } else if (num.startsWith('0') && num.length === 11) {
-    num = num.slice(1);
-  }
+    const MAX_CONTACTS = session.length * 400;
+    if (to.length === 0 && message.length === 0) {
+      toast.error("Please add at least one number or message.");
+      return null;
+    }
+    if (to.length > MAX_CONTACTS) {
+      toast.error(`You can only send to max ${MAX_CONTACTS} contacts using ${session.length} sessions.`);
+      return null;
+    }
 
-  return `91${num}`;
-});
-
-
-
-  const message = messages.map(m => m.text);
-
-const photo = attachfiles
-  .filter(f => f.type === "Photos")
-  .map(f => f.url.split('/').pop());  // sirf filename nikalta hai
-
-
-
-  const videoFile = attachfiles.find(f => f.type === "Videos");
-  const pdfFile = attachfiles.find(f => f.type === "Pdf");
-  const docxFile = attachfiles.find(f => f.type === "Docx");
-
-  // ✅ Input validation
-  if (to.length === 0 && message.length === 0 ) {
-    toast.error('Please add at least one number, message, or file before sending.');
-    return null;
-  }
-
-
-  return {
-from:session.map(session => session.realNumber),
-    to,
-    message,
-    photo,
-   video : videoFile ? videoFile.url.split('/').pop() : "",
-    sendVideoAsSticker: true,
-    pdf: pdfFile ? pdfFile.url.split('/').pop() : "",
-    docx: docxFile ? docxFile.url.split('/').pop() : ""
+    return {
+      from: session.map(s => s.realNumber),
+      to,
+      message,
+      photo,
+      video: videoFile ? videoFile.url.split('/').pop() : "",
+      sendVideoAsSticker: true,
+      pdf: pdfFile ? pdfFile.url.split('/').pop() : "",
+      docx: docxFile ? docxFile.url.split('/').pop() : ""
+    };
   };
-};
 
+  const handleSendNow = async () => {
+    const payload = preparePayload();
+    if (!payload) return;
 
-const handleSendNow = async () => {
-  const payload = preparePayload();
-  if (!payload) return; 
+    setLoading(true);
+    try {
+      const res = await axios.post("http://13.53.41.83/whatsapp/send", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      });
 
-  setLoading(true);
+      const formattedMessages = numbers.map((n, idx) => ({
+        id: n.number,
+        type: "Contact",
+        date: new Date().toISOString(),
+        status: "Sent",
+        message: messages[idx] ? messages[idx].text : ''
+      }));
 
-  try {
-    const res = await axios.post("http://16.171.165.95/whatsapp/send", payload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      setSentMessages(formattedMessages);
+      dispatch(storeMessage([]));
+      dispatch(storeFiles([]));
+      dispatch(storeWhatsappNumber([]));
+      setShowSendModal(true);
+      toast.success("Messages sent!");
+    } catch (error) {
+      console.error("Error sending messages:", error);
+      toast.error(error?.response?.data?.message || 'Failed to send messages.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const handleScheduleSend = async () => {
+    const payload = preparePayload();
+    if (!payload) return;
 
+    payload.scheduledTime = new Date(scheduledDate).toISOString();
+    setLoading(true);
+    try {
+      const res = await axios.post("http://13.53.41.83/whatsapp/sendsc", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      });
 
-    const formattedMessages = numbers.map((n, idx) => ({
-      id: n.number,
-      type: "Contact",
-      date: new Date().toISOString(),
-      status: "Sent",
-      message: messages[idx] ? messages[idx].text : ''
-    }));
-
-    setSentMessages(formattedMessages);
-    dispatch(storeMessage([]));
-    dispatch(storeFiles([]));
-    dispatch(storeWhatsappNumber([]));
-    setShowSendModal(true);
-
-  } catch (error) {
-    console.error("Error sending messages:", error);
-    toast.error(error?.response?.data?.message || 'Failed to send messages.');
-  } finally {
-    setLoading(false);
-  }
-};
-const sentmessge=()=>{
-  navigate('/sent')
-}
-const handleScheduleSend = async () => {
-  const payload = preparePayload();
-  if (!payload) return;
-
-  payload.scheduledTime = new Date(scheduledDate).toISOString();
-  setLoading(true);
-
-  try {
-    const res = await axios.post("http://16.171.165.95/whatsapp/sendsc", payload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-
-
-    dispatch(storeMessage([]));
-    dispatch(storeFiles([]));
-    dispatch(storeWhatsappNumber([]));
-    setShowCalendar(false);
-
-  const updatedMessages = [...scheduledMessages, res.data];
-    dispatch(storeScheduleMessage(updatedMessages));
-
-   
-
-  } catch (error) {
-    console.error("Error scheduling message:", error);
-    toast.error(error?.response?.data?.message || 'Failed to schedule message.');
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+      dispatch(storeMessage([]));
+      dispatch(storeFiles([]));
+      dispatch(storeWhatsappNumber([]));
+      const updatedMessages = [...scheduledMessages, res.data];
+      dispatch(storeScheduleMessage(updatedMessages));
+      toast.success("Message scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling message:", error);
+      toast.error(error?.response?.data?.message || 'Failed to schedule message.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const sentmessge = () => navigate('/sent');
 
 
   return (
@@ -218,21 +192,21 @@ const handleScheduleSend = async () => {
 
              
 
-              <button
-                onClick={handleSendNow}
-                className="btn border-0 d-flex align-items-center gap-2 px-2 py-1 rounded-pill"
-                style={{
-                  backgroundColor: '#128C7E',
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize:"12px",
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                }}
-               
-              >
-                <BsFillSendFill size={18} />
-                Send Now
-              </button>
+               <button
+        onClick={handleSendNow}
+        className="btn border-0 d-flex align-items-center gap-2 px-2 py-1 rounded-pill"
+        style={{
+          backgroundColor: '#128C7E',
+          color: 'white',
+          fontWeight: '600',
+          fontSize: "12px",
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}
+        disabled={loading}
+      >
+        <BsFillSendFill size={18} />
+        {loading ? "Sending..." : "Send Now"}
+      </button>
             </div>
           </Col>
         </Row>
