@@ -22,6 +22,7 @@ const ScheduleSend = () => {
         if (filtered.length === 0) {
           dispatch(storeScheduleMessage([]));
         }
+        
       } else {
         setUpcomingMessages([]);
         dispatch(storeScheduleMessage([])); // Dispatch if scheduledMessages itself is empty or undefined

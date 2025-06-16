@@ -85,12 +85,14 @@ const QRCodeLogin = () => {
       startNewSession();
     }
   }, []);
-  const helpcontact=()=>{
-    navigate("/help")
-  }
-  const backlogin=()=>{
-    navigate("/")
-  }
+
+  const helpcontact = () => {
+    navigate("/help");
+  };
+
+  const backlogin = () => {
+    navigate("/");
+  };
 
   const selected = sessions.find((s) => s.sessionId === activeSession);
 
@@ -125,53 +127,56 @@ const QRCodeLogin = () => {
         </Col>
 
         {/* Main Content */}
-       <Col md={9} className="d-flex justify-content-center align-items-center bg-light">
-  {selected ? (
-    <Card className="p-4 shadow rounded-4" style={{ width: '100%', maxWidth: '600px', backgroundColor: '#fff' }}>
-      <h4 className="text-center mb-4 text-success">Log into WhatsApp Web</h4>
+        <Col md={9} className="d-flex justify-content-center align-items-center bg-light">
+          {selected ? (
+            <Card className="p-4 shadow rounded-4" style={{ width: '100%', maxWidth: '600px', backgroundColor: '#fff' }}>
+              <h4 className="text-center mb-4 text-success">Log into WhatsApp Web</h4>
+              <Row>
+                {/* Instructions */}
+                <Col md={6} className="pe-4 border-end">
+                  <ul className="list-unstyled small">
+                    <li><strong>1.</strong> Open WhatsApp on your phone</li>
+                    <li><strong>2.</strong> Tap <strong>Menu</strong> <span className="text-muted">(⋮)</span> on Android or <strong>Settings</strong> on iPhone</li>
+                    <li><strong>3.</strong> Tap <strong>Linked devices</strong> & then <strong>Link a device</strong></li>
+                    <li><strong>4.</strong> Point your phone at this screen to scan the QR code</li>
+                  </ul>
+                  <div onClick={helpcontact} className="d-block small text-decoration-none mt-3">Need help getting started?</div>
+                  <div onClick={backlogin} className="d-block small text-decoration-none mt-3">Back To The Login Page?</div>
+                </Col>
 
-      <Row>
-        {/* Instructions */}
-        <Col md={6} className="pe-4 border-end">
-          <ul className="list-unstyled small">
-            <li><strong>1.</strong> Open WhatsApp on your phone</li>
-            <li><strong>2.</strong> Tap <strong>Menu</strong> <span className="text-muted">(⋮)</span> on Android or <strong>Settings</strong> on iPhone</li>
-            <li><strong>3.</strong> Tap <strong>Linked devices</strong> & then <strong>Link a device</strong></li>
-            <li><strong>4.</strong> Point your phone at this screen to scan the QR code</li>
-          </ul>
-          <div onClick={()=>helpcontact()} className="d-block small text-decoration-none mt-3">Need help getting started?</div>
-             <div onClick={()=>backlogin()} className="d-block small text-decoration-none mt-3">Back To The Login Page?</div>
-        
-        </Col>
+                {/* QR Code or Status Display */}
+                <Col md={6} className="text-center">
+               {selected.status === 'Initializing...' ? (
+  <div className="text-center">
+    <Spinner animation="border" variant="success" />
+    <p className="mt-2 text-muted">Initializing session...</p>
+  </div>
+) : selected.qr ? (
+  <div>
+    <Image src={selected.qr} fluid className="border rounded-3" />
+    <p className="mt-2 text-muted">📷 Scan QR from WhatsApp</p>
+  </div>
+) : !selected.qr && !selected.realNumber ? (
+  <div className="text-center">
+    <Spinner animation="grow" variant="success" />
+    <p className="mt-2 text-muted">Please wait... Logging in</p>
+  </div>
+) : selected.realNumber ? (
+  <Alert variant="success" className="text-center">
+    ✅ Logged in as <strong>{selected.realNumber}</strong>
+  </Alert>
+) : null}
 
-        {/* QR Code Display */}
-        <Col md={6} className="text-center">
-          {selected.status === 'Initializing...' || (!selected.qr && !selected.realNumber) ? (
+                </Col>
+              </Row>
+            </Card>
+          ) : (
             <div className="text-center">
-              <Spinner animation="border" variant="success" />
-              <p className="mt-2 text-muted">{selected.status}</p>
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2 text-muted">Loading session...</p>
             </div>
-          ) : selected.qr ? (
-            <div>
-              <Image src={selected.qr} fluid className="border rounded-3" />
-        
-            </div>
-          ) : selected.realNumber ? (
-            <Alert variant="success" className="text-center">
-              ✅ Logged in as <strong>{selected.realNumber}</strong>
-            </Alert>
-          ) : null}
+          )}
         </Col>
-      </Row>
-    </Card>
-  ) : (
-    <div className="text-center">
-      <Spinner animation="border" variant="primary" />
-      <p className="mt-2 text-muted">Loading session...</p>
-    </div>
-  )}
-</Col>
-
       </Row>
 
       {selected && selected.realNumber && (
